@@ -48,9 +48,11 @@ toggle_script="$(pwd)/toggle-cron.sh"
 # Configure key binding based on desktop environment
 case $desktop_environment in
     "GNOME")
-        gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'toggle cron'
-        gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command "$toggle_script"
-        gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding "$custom_key_binding"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'toggle cron'
+        gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command "$toggle_script"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding "$custom_key_binding"
+        ;;
+
         ;;
     "KDE")
         kwriteconfig5 --file ~/.config/kwinrc --group ModifierOnlyShortcuts --key Meta "$custom_key_binding=script:$toggle_script"
