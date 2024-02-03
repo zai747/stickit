@@ -2,7 +2,6 @@
 
 echo "Starting Installation..."
 
-echo "Installing dependencies..."
 # Install xdotool
 sudo apt-get update
 sudo apt-get install -y xdotool
@@ -19,26 +18,30 @@ chmod +x "$(pwd)/move-mouse.sh"
 chmod +x "$(pwd)/toggle-cron.sh"
 
 # Set up cron job
+crontab -l > backup_crontab.txt
 new_cron_line="* * * * * DISPLAY=:0 $(pwd)/move-mouse.sh"
-{ crontab -l; echo "$new_cron_line"; } | crontab -
+(crontab -l 2>/dev/null; echo "$new_cron_line") | crontab -
 
 # Check for the desktop environment
 desktop_environment="unknown"
 
 # Check for GNOME
-if [ -n "$(command -v gnome-shell)" ]; then
+if command -v gnome-shell &> /dev/null && [ -x "$(command -v gnome-shell)" ]; then
     desktop_environment="GNOME"
 fi
 
 # Check for KDE
-if [ -n "$(command -v kwin)" ]; then
+if command -v kwin &> /dev/null && [ -x "$(command -v kwin)" ]; then
     desktop_environment="KDE"
 fi
 
 # Check for XFCE
-if [ -n "$(command -v xfce4-session)" ]; then
+if command -v xfce4-session &> /dev/null && [ -x "$(command -v xfce4-session)" ]; then
     desktop_environment="XFCE"
 fi
+
+# Convert to lowercase for case-insensitive check
+desktop_environment=$(echo "$desktop_environment" | tr '[:upper:]' '[:lower:]')
 
 # Echo the detected desktop environment
 echo "Detected Desktop Environment: $desktop_environment"
@@ -47,22 +50,19 @@ toggle_script="$(pwd)/toggle-cron.sh"
 
 # Configure key binding based on desktop environment
 case $desktop_environment in
-    "GNOME")
-        gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'toggle cron'
-        gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command "$toggle_script"
-        gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding "$custom_key_binding"
+    "gnome")
+        chmod +x "$(pwd)/gnome-add-shortcut.sh"
+	./gnome-add-shortcut.sh 
         ;;
-
-        ;;
-    "KDE")
+    "kde")
         kwriteconfig5 --file ~/.config/kwinrc --group ModifierOnlyShortcuts --key Meta "$custom_key_binding=script:$toggle_script"
         ;;
-    "XFCE")
+    "xfce")
         xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt><Shift>F" -n -t string -s "$toggle_script"
         ;;
     *)
         echo "Desktop environment not supported"
         ;;
-esac
+esac > keybinding_config.log 2>&1
 
 echo "Added Key binding of $custom_key_binding to toggle the script on and off"
